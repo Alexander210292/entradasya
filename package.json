@@ -1,0 +1,53 @@
+{
+  "name": "entradasya",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node scripts/service.ts start",
+    "migrate": "node scripts/service.ts migrate",
+    "seed:auth": "node scripts/service.ts seed auth",
+    "build:web": "tsc -p web/tsconfig.json && node scripts/build-web.ts",
+    "verify:base": "node scripts/verify-base.ts",
+    "typecheck": "tsc -p tsconfig.json && tsc -p web/tsconfig.json",
+    "start:web": "node scripts/nginx.ts",
+    "start:local": "node scripts/start-local.ts start",
+    "verify:web": "npm run build:web && node scripts/verify-base.ts --browser",
+    "seed:events": "node scripts/seed-events.ts",
+    "stop:local": "node scripts/start-local.ts stop"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource/instrument-serif": "^5.3.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "jsqr": "^1.4.0",
+    "nodemailer": "^10.6.0",
+    "pdfkit": "^0.17.2",
+    "pg": "^8.23.1",
+    "qrcode": "^1.5.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "sharp": "^0.35.5",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.19.2",
+    "@types/nodemailer": "^8.0.2",
+    "@types/pdfkit": "^0.17.7",
+    "@types/pg": "^8.23.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "esbuild": "^0.25.12",
+    "playwright-core": "^1.65.1",
+    "typescript": "^5.9.3"
+  }
+}

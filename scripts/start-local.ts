@@ -21,6 +21,9 @@ const project = resolve(import.meta.dirname, "..");
 const local = resolve(process.env.ENTRADASYA_LOCAL_DIR ?? resolve(project, ".local"));
 const statePath = resolve(local, "stack.json");
 const logPath = resolve(local, "app.log");
+const startupTimeoutMs = 120000;
+const shutdownTimeoutMs = 90000;
+const healthCheckAttempts = 150;
 const env: NodeJS.ProcessEnv = { ...process.env, ENTRADASYA_LOCAL_DIR: local };
 // Cada backend carga su propio puerto y conexión desde .local/env.
 delete env.HOST;
@@ -98,7 +101,7 @@ async function stopStack() {
   const state = readState();
   if (state && isAlive(state.supervisor)) {
     signal(state.supervisor.pid, "SIGTERM");
-    if (!(await waitUntil(() => !isAlive(state.supervisor), 25000))) {
+    if (!(await waitUntil(() => !isAlive(state.supervisor), shutdownTimeoutMs))) {
       throw new Error(`El cierre sigue en curso. Revisa ${logPath}.`);
     }
   }
@@ -166,7 +169,7 @@ async function startStack() {
   const ready = await waitUntil(() => {
     const state = readState();
     return Boolean(state && state.supervisor.pid === child.pid && state.ready) || !identity(child.pid);
-  }, 35000);
+  }, startupTimeoutMs);
   const state = readState();
   if (!ready || !state?.ready || state.supervisor.pid !== child.pid || !isAlive(state.supervisor)) {
     if (state && state.supervisor.pid === child.pid && isAlive(state.supervisor)) signal(state.supervisor.pid, "SIGTERM");
@@ -237,13 +240,13 @@ async function supervise() {
       ...services.map((_, index) => `http://127.0.0.1:${3001 + index}/health`),
       `http://127.0.0.1:${env.WEB_PORT}/health`,
     ];
-    for (let attempt = 0; attempt < 30 && !stopping; attempt += 1) {
+    for (let attempt = 0; attempt < healthCheckAttempts && !stopping; attempt += 1) {
       if ((await Promise.all(dependencies.map(healthy))).every(Boolean) && !stopping) {
         state.ready = true;
         writeState(state);
         break;
       }
-      if (attempt === 29) throw new Error("La web o un servicio no pasó el chequeo de salud.");
+      if (attempt === healthCheckAttempts - 1) throw new Error("La web o un servicio no pasó el chequeo de salud.");
       await delay(220);
     }
   } catch (error) {
